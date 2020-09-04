@@ -40,6 +40,21 @@ func findVersion(project: XcodeProj) -> String? {
     return "\(version!).\(build!)"
 }
 
+func shell(_ command: String) -> String {
+    let task = Process()
+    let pipe = Pipe()
+
+    task.standardOutput = pipe
+    task.arguments = ["-c", command]
+    task.launchPath = "/bin/bash"
+    task.launch()
+
+    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    let output = String(data: data, encoding: .utf8)!
+
+    return output
+}
+
 guard let xcodeproj = try findProject() else {
     print("Project file not found")
     exit(1)
@@ -49,4 +64,12 @@ guard let currentVersion = findVersion(project: xcodeproj) else {
     exit(1)
 }
 
-print("Current version: \(currentVersion)")
+let currentTag = "v\(currentVersion)"
+let tags = shell("git tag -l")
+
+if tags.contains(currentTag) {
+    print("Tag \(currentTag) exists")
+    exit(1)
+}
+
+print("Tag \(currentTag) available")
