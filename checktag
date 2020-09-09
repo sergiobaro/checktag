@@ -27,17 +27,21 @@ func findProject() throws -> XcodeProj? {
 func findVersion(project: XcodeProj) -> String? {
     let version = project.pbxproj.buildConfigurations.compactMap {
         $0.buildSettings["MARKETING_VERSION"]
-    }.first
+    }.first as? String
 
     let build = project.pbxproj.buildConfigurations.compactMap {
         $0.buildSettings["CURRENT_PROJECT_VERSION"]
-    }.first
+    }.first as? String
 
     if version == nil || build == nil {
         return nil
     }
 
-    return "\(version!).\(build!)"
+    guard let buildNumber = Int(build!) else {
+        return nil
+    }
+
+    return "\(version!).\(buildNumber + 1)"
 }
 
 func shell(_ command: String) -> String {
